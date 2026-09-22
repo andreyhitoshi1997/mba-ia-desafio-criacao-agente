@@ -321,7 +321,7 @@ cp .env.example .env
 | Variável | Obrigatória | Descrição |
 |---|---|---|
 | `GOOGLE_API_KEY` | sim | Chave do Google AI Studio (também aceita `GEMINI_API_KEY`). |
-| `AURORA_MODEL` | não | Modelo Gemini padrão para os três agentes (recomendado: `gemini-2.5-flash-lite` — tier gratuito com RPM bem mais folgado que `gemini-2.5-flash`, relevante porque o fluxo do avaliador faz várias dezenas de chamadas ao modelo). |
+| `AURORA_MODEL` | não | Modelo Gemini padrão para os três agentes (recomendado: `gemini-flash-lite-latest` — alias sempre atualizado, com cota de tier gratuito mais folgada nos nossos testes do que apontar um modelo fixo como `gemini-2.5-flash`; relevante porque o fluxo do avaliador faz várias dezenas de chamadas ao modelo numa janela curta). |
 | `AURORA_MODEL_ROOT` / `AURORA_MODEL_AGENDA` / `AURORA_MODEL_REGULAMENTO` | não | Sobrescreve o modelo de um agente específico. |
 
 ### Instalar
@@ -379,3 +379,16 @@ uv run python scripts/teste_concorrencia_stress.py  # 20 rodadas de disputa
 Os passos 1 (clone limpo), 13 (reiniciar a API no meio da conversa) e 15
 (auditoria do repositório) são, por natureza, manuais — não dá para
 automatizar um restart de processo de dentro do próprio processo.
+
+### Nota sobre limites de tier gratuito
+
+Chaves novas do Google AI Studio podem ter cota diária bem mais restrita do
+que "algumas dezenas de chamadas por conversa" (nos nossos testes, 20
+requisições/dia para um modelo específico numa chave nova). Isso é externo
+ao código, mas afeta a execução do fluxo completo: os três agentes têm
+`retry_config` com backoff (`aurora/agents/resiliencia.py`) para picos
+transitórios de RPM, porém uma cota diária esgotada não tem como ser
+contornada por retry — só reseta em 24h ou some com billing habilitado no
+projeto do Google AI Studio (https://ai.studio/projects). Se o fluxo do
+avaliador falhar com `429`/`402` em vez de um erro do assistente, é esse o
+sintoma, não um bug de código.
