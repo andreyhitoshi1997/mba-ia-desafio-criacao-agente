@@ -1,0 +1,35 @@
+[project]
+name = "aurora"
+version = "0.1.0"
+description = "Assistente virtual do Residencial Aurora — Google ADK + FastAPI"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "google-adk[db]==2.9.2",
+    "google-genai>=2.24.0",
+    "fastapi>=0.141.1",
+    "uvicorn[standard]>=0.53.0",
+    "python-dotenv>=1.2.3",
+    "greenlet>=3.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.25.0",
+]
+
+# Projeto "app", não biblioteca: sem build-system/instalação editável de
+# propósito — uma incompatibilidade observada entre o .pth editável que o uv
+# gera (marcado com a flag `hidden` do macOS) e o `site.py` do CPython
+# 3.12.14 (python-build-standalone) faz esse .pth ser silenciosamente
+# ignorado, quebrando `import aurora`. Rodar via `uv run python -m aurora.cli
+# ...` a partir da raiz do projeto evita esse mecanismo inteiramente — `uv
+# sync` só resolve e instala as dependências.
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
